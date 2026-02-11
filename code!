@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google - Search</title>
+    <style>
+        body { font-family: arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .search-box { width: 450px; padding: 12px; border-radius: 24px; border: 1px solid #dfe1e5; font-size: 16px; outline: none; }
+        .btn { margin-top: 20px; padding: 10px 20px; background: #f8f9fa; border: 1px solid #f8f9fa; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <img src="https://www.google.com" width="200">
+    <div style="margin-top: 20px;">
+        <input type="text" id="urlInput" class="search-box" placeholder="Search Google or type a URL">
+    </div>
+    <button class="btn" onclick="launch()">Google Search</button>
+
+    <script>
+        function launch() {
+            var input = document.getElementById('urlInput').value;
+            // This routes the request through a web proxy engine
+            var proxyBase = "https://www.croxyproxy.com";
+            
+            var target;
+            if (input.includes('.') && !input.includes(' ')) {
+                target = input.startsWith('http') ? input : 'https://' + input;
+            } else {
+                target = "https://www.google.com" + encodeURIComponent(input);
+            }
+            // Base64 encoding helps hide the destination from simple URL filters
+            window.location.href = proxyBase + btoa(target);
+        }
+    </script>
+</body>
+</html>
