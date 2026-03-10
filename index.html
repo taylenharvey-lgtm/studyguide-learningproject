@@ -1,35 +1,128 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Google - Search</title>
-    <style>
-        body { font-family: arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .search-box { width: 450px; padding: 12px; border-radius: 24px; border: 1px solid #dfe1e5; font-size: 16px; outline: none; }
-        .btn { margin-top: 20px; padding: 10px 20px; background: #f8f9fa; border: 1px solid #f8f9fa; cursor: pointer; border-radius: 4px; }
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Playlist Viewer</title>
+  <style>
+        body { font-family: sans-serif; background-color: #f0f0f0; padding: 20px; }
+        .wrapper { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1200px; margin: 0 auto; }
+        #player { flex: 1 1 640px; height: 360px; background-color: #000; }
+        #playlist-container { 
+            flex: 1 1 300px; 
+            height: 360px; 
+            overflow-y: auto; 
+            background: white; 
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .playlist-item {
+            display: flex;
+            gap: 10px;
+            cursor: pointer;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .playlist-item:hover { background-color: #f9f9f9; }
+        .playlist-item img { width: 100px; height: 56px; }
+        .playlist-item p { margin: 0; font-size: 14px; font-weight: bold; }
+        @media (max-width: 800px) {
+            .wrapper { flex-direction: column; }
+            #player { height: 250px; }
+        }
     </style>
-</head>
-<body>
-    <img src="https://www.google.com" width="200">
-    <div style="margin-top: 20px;">
-        <input type="text" id="urlInput" class="search-box" placeholder="Search Google or type a URL">
-    </div>
-    <button class="btn" onclick="launch()">Google Search</button>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <h2 style="text-align:center;">My YouTube Playlist</h2>
+  <div class="wrapper">
+   <div id="player"></div>
+   <div id="playlist-container">
+    <p>Loading playlist...</p>
+   </div>
+  </div>
+  <script>
+        // Format: { type: 'youtube', id: 'VIDEO_ID' } or { type: 'drive', id: 'FILE_ID' }
+        const videos = [
+            { type: 'youtube', id: '0c_3ZLNdG7w' },
+            { type: 'youtube', id: 'jx9Qa3hnbaM' },
+            { type: 'youtube', id: 'z7YpMaD4QFk' },
+            { type: 'youtube', id: 'jP7FYrA_KPg' },
+            { type: 'youtube', id: 'nWGc1kyhw7c' },
+            { type: 'youtube', id: 'YSQfqm-zezU' },
+            { type: 'youtube', id: 'CQbV6HN-OXM' },
+            { type: 'youtube', id: 'B9YNpQO34To' },
+            { type: 'youtube', id: '7oDXz-dxr58' },
+            { type: 'youtube', id: '_-n8chgf0BY' },
+            { type: 'youtube', id: 'SJIGvTRpoCc' }
+        ];
+        let currentVideoIndex = 0;
+        
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-    <script>
-        function launch() {
-            var input = document.getElementById('urlInput').value;
-            // This routes the request through a web proxy engine
-            var proxyBase = "https://www.blockaway.net";
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '360',
+                width: '640',
+                videoId: videos[0].type === 'youtube' ? videos[0].id : '',
+                playerVars: {
+                    'autoplay': 0
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        function playVideo(index) {
+            const video = videos[index];
+            currentVideoIndex = index;
+            const playerDiv = document.getElementById('player');
             
-            var target;
-            if (input.includes('.') && !input.includes(' ')) {
-                target = input.startsWith('http') ? input : 'https://' + input;
-            } else {
-                target = "https://www.google.com" + encodeURIComponent(input);
+            if (video.type === 'youtube') {
+                // Use cueVideoById to switch videos without recreating the player
+                if (player && player.cueVideoById) {
+                    player.cueVideoById(video.id);
+                    player.playVideo();
+                }
+            } else if (video.type === 'drive') {
+                playerDiv.innerHTML = `<iframe width="640" height="360" src="https://drive.google.com/file/d/${video.id}/preview" frameborder="0" allowfullscreen></iframe>`;
             }
-            // Base64 encoding helps hide the destination from simple URL filters
-            window.location.href = proxyBase + btoa(target);
+        }
+
+        function onPlayerReady(event) {
+            const playlistContainer = document.getElementById('playlist-container');
+            playlistContainer.innerHTML = '';
+            
+            videos.forEach((video, index) => {
+                const item = document.createElement('div');
+                item.className = 'playlist-item';
+                
+                let thumbnail = '';
+                if (video.type === 'youtube') {
+                    thumbnail = `https://img.youtube.com/vi/${video.id}/default.jpg`;
+                } else if (video.type === 'drive') {
+                    thumbnail = `https://drive-thirdparty.googleusercontent.com/16/type/video/mp4`;
+                }
+                
+                item.innerHTML = `
+                    <img src="${thumbnail}" alt="Video thumbnail" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2256%22%3E%3Crect fill=%22%23ccc%22 width=%22100%22 height=%2256%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23666%22%3E${video.type.toUpperCase()}%3C/text%3E%3C/svg%3E'">
+                    <p>Video ${index + 1}</p>
+                `;
+                item.addEventListener('click', () => playVideo(index));
+                playlistContainer.appendChild(item);
+            });
+            
+            // Load first video
+            playVideo(0);
         }
     </script>
-</body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9da2834611c5498c',t:'MTc3MzE0NzczNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
