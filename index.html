@@ -1,502 +1,387 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="h-full">
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Embedder</title>
+  <title>YouTube Video Player</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="/_sdk/element_sdk.js"></script>
-  <script src="/_sdk/data_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Outfit:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body, #app-wrapper {
-      height: 100%;
-      width: 100%;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      overflow: hidden;
-    }
-
-    #app-wrapper {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .header {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      padding: 2rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .header h1 {
-      color: white;
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .input-section {
-      background: rgba(255, 255, 255, 0.08);
-      padding: 1.5rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    }
-
-    .input-container {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .url-input {
-      flex: 1;
-      min-width: 200px;
-      padding: 0.75rem 1rem;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.95);
-      font-size: 0.95rem;
-      transition: all 0.2s ease;
-    }
-
-    .url-input:focus {
-      outline: none;
-      border-color: #fbbf24;
-      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
-    }
-
-    .add-btn {
-      padding: 0.75rem 1.5rem;
-      background: #fbbf24;
-      color: #1f2937;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-    }
-
-    .add-btn:hover:not(:disabled) {
-      background: #f59e0b;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
-    }
-
-    .add-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 2rem;
-    }
-
-    .videos-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .video-card {
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      cursor: pointer;
+    * { box-sizing: border-box; }
+    .font-heading { font-family: 'Space Grotesk', sans-serif; }
+    .font-body { font-family: 'Outfit', sans-serif; }
+    
+    .video-container {
       position: relative;
-    }
-
-    .video-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-    }
-
-    .video-thumbnail {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 3rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .play-icon {
-      position: absolute;
-      width: 60px;
-      height: 60px;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      z-index: 10;
-      transition: all 0.2s ease;
-    }
-
-    .video-card:hover .play-icon {
-      background: white;
-      transform: scale(1.1);
-    }
-
-    .video-preview-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 1rem;
-    }
-
-    .video-preview-overlay.active {
-      display: flex;
-    }
-
-    .video-preview-container {
-      position: relative;
-      width: 100%;
-      max-width: 900px;
-      left: 0;
-      height: 0;
       padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 16px;
     }
-
-    .video-preview-container iframe {
+    
+    .video-container iframe {
+      position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      position: absolute;
-      border: 0;
-    }
-
-    .close-preview {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: white;
       border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      z-index: 1001;
     }
-
-    .close-preview:hover {
-      background: #f0f0f0;
-      transform: scale(1.1);
+    
+    .glow-effect {
+      box-shadow: 0 0 60px -10px rgba(139, 92, 246, 0.3);
     }
-
-    .video-info {
-      padding: 1rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+    
+    .input-glow:focus {
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
     }
-
-    .video-title {
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 0.5rem;
-      line-height: 1.4;
-      word-break: break-word;
-      flex: 1;
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-
-    .delete-btn {
-      margin-top: 0.75rem;
-      padding: 0.5rem 1rem;
-      background: #ef4444;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
+    
+    .fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
     }
-
-    .delete-btn:hover {
-      background: #dc2626;
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
     }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: rgba(255, 255, 255, 0.7);
-      text-align: center;
-    }
-
-    .empty-state-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-
-    .empty-state-text {
-      font-size: 1.1rem;
-    }
-
-    .loading-state {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(31, 41, 55, 0.2);
-      border-top-color: #1f2937;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .error-message {
-      background: #fee2e2;
-      color: #dc2626;
-      padding: 0.75rem 1rem;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-    }
-
-    .success-message {
-      position: fixed;
-      top: 1rem;
-      right: 1rem;
-      background: #10b981;
-      color: white;
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-      animation: slideIn 0.3s ease;
-      z-index: 50;
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateX(400px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
+    
+    .pulse-hover:hover {
+      animation: pulse 0.6s ease-in-out;
     }
   </style>
   <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  </head>
- <body>
-  <div id="app-wrapper">
-   <div class="header">
-    <h1 id="gallery-title">YouTube Video Gallery</h1>
+ <body class="h-full font-body">
+  <div id="app-wrapper" class="min-h-full w-full overflow-auto" style="background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);">
+   <div class="max-w-4xl mx-auto px-4 py-8 sm:py-12"><!-- Header -->
+    <header class="text-center mb-8 fade-in">
+     <div class="inline-flex items-center gap-3 mb-4">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center shadow-lg">
+       <svg class="w-6 h-6 text-white" fill="currentColor" viewbox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+       </svg>
+      </div>
+      <h1 id="page-title" class="font-heading text-3xl sm:text-4xl font-bold text-white">Video Player</h1>
+     </div>
+     <p class="text-gray-400 text-lg">Paste a YouTube link below to start watching</p>
+    </header><!-- Input Section -->
+    <div class="mb-8 fade-in" style="animation-delay: 0.1s;">
+     <form id="video-form" class="flex flex-col sm:flex-row gap-3">
+      <div class="flex-1 relative"><input type="text" id="url-input" placeholder="Paste YouTube URL here..." class="w-full px-5 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none input-glow transition-all duration-300"> <button type="button" id="clear-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors hidden" aria-label="Clear input">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg></button>
+      </div><button type="submit" class="px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-xl transition-all duration-300 pulse-hover shadow-lg shadow-violet-500/25"> <span class="flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg> Play </span> </button>
+     </form>
+    </div><!-- Video Player Section -->
+    <div id="player-section" class="fade-in" style="animation-delay: 0.2s;"><!-- Empty State -->
+     <div id="empty-state" class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-12 text-center">
+      <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-white/10 flex items-center justify-center">
+       <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+       </svg>
+      </div>
+      <h3 class="font-heading text-xl font-semibold text-white mb-2">No Video Playing</h3>
+      <p class="text-gray-400">Enter a YouTube URL above to watch a video</p>
+     </div><!-- Video Player -->
+     <div id="video-player" class="hidden">
+      <div class="video-container glow-effect bg-black/50"><iframe id="youtube-iframe" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      </div><!-- Video Info -->
+      <div id="video-info" class="mt-4 p-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl">
+       <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+         <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+          <svg class="w-5 h-5 text-red-400" fill="currentColor" viewbox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" /> <path fill="#fff" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+          </svg>
+         </div>
+         <div>
+          <p class="text-white font-medium">Now Playing</p>
+          <p id="video-id-display" class="text-gray-400 text-sm">Video ID: --</p>
+         </div>
+        </div><button id="new-video-btn" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-colors"> New Video </button>
+       </div>
+      </div>
+     </div>
+    </div><!-- Recent Videos -->
+    <div id="recent-section" class="mt-8 hidden fade-in">
+     <div class="flex items-center justify-between mb-4">
+      <h2 class="font-heading text-lg font-semibold text-white">Recently Watched</h2><button id="clear-history-btn" class="text-gray-400 hover:text-white text-sm transition-colors"> Clear All </button>
+     </div>
+     <div id="recent-videos" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"><!-- Recent videos will be inserted here -->
+     </div>
+    </div><!-- Tips Section -->
+    <div class="mt-12 fade-in" style="animation-delay: 0.3s;">
+     <div class="bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-xl p-6">
+      <h3 class="font-heading text-lg font-semibold text-white mb-3 flex items-center gap-2">
+       <svg class="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg> Supported Formats</h3>
+      <ul class="text-gray-300 text-sm space-y-2">
+       <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span> youtube.com/watch?v=VIDEO_ID</li>
+       <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span> youtu.be/VIDEO_ID</li>
+       <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span> youtube.com/embed/VIDEO_ID</li>
+      </ul>
+     </div>
+    </div>
    </div>
-   <div class="content" id="content">
-    <div class="videos-grid" id="videos-grid"></div>
-   </div>
-  </div>
-  <div class="video-preview-overlay" id="preview-overlay">
-   <div class="video-preview-container" id="preview-container"></div><button class="close-preview" id="close-preview-btn">✕</button>
   </div>
   <script>
-    let config = {};
-
+    // Default configuration
     const defaultConfig = {
-      gallery_title: "YouTube Video Gallery",
-      video_1_title: "Video 1",
-      video_1_url: "https://www.youtube.com/watch?v=0c_3ZLNdG7w",
-      video_2_title: "Video 2",
-      video_2_url: "https://www.youtube.com/watch?v=jx9Qa3hnbaM",
-      video_3_title: "Video 3",
-      video_3_url: "https://www.youtube.com/watch?v=z7YpMaD4QFk",
-      video_4_title: "Video 4",
-      video_4_url: "https://www.youtube.com/watch?v=jP7FYrA_KPg",
-      video_5_title: "Video 5",
-      video_5_url: "https://www.youtube.com/watch?v=nWGc1kyhw7c",
-      video_6_title: "Video 6",
-      video_6_url: "https://www.youtube.com/watch?v=YSQfqm-zezU",
-      video_7_title: "Video 7",
-      video_7_url: "https://www.youtube.com/watch?v=CQbV6HN-OXM",
-      video_8_title: "Video 8",
-      video_8_url: "https://www.youtube.com/watch?v=B9YNpQO34To",
-      video_9_title: "Video 9",
-      video_9_url: "https://www.youtube.com/watch?v=7oDXz-dxr58",
-      video_10_title: "Video 10",
-      video_10_url: "https://www.youtube.com/watch?v=_-n8chgf0BY",
-      video_11_title: "Video 11",
-      video_11_url: "https://www.youtube.com/watch?v=SJIGvTRpoCc"
+      page_title: 'Video Player',
+      input_placeholder: 'Paste YouTube URL here...',
+      background_color: '#0f0f1a',
+      accent_color: '#8b5cf6',
+      text_color: '#ffffff',
+      font_family: 'Outfit',
+      font_size: 16
     };
-
-    // Extract video ID from URL
+    
+    // Recent videos storage (in-memory for this session)
+    let recentVideos = [];
+    const MAX_RECENT = 8;
+    
+    // Extract YouTube video ID from various URL formats
     function extractVideoId(url) {
       const patterns = [
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
-        /youtube\.com\/embed\/([^&\n?#]+)/,
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/watch\?.*&v=)([^#\&\?]*)/,
         /^([a-zA-Z0-9_-]{11})$/
       ];
-
+      
       for (const pattern of patterns) {
         const match = url.match(pattern);
-        if (match) return match[1];
+        if (match && match[1]) {
+          return match[1];
+        }
       }
       return null;
     }
-
-    // Create embed URL
-    function createEmbedUrl(videoId) {
-      return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
-    }
-
-    // Open video preview
-    function openPreview(videoId) {
-      const embedUrl = createEmbedUrl(videoId);
-      const previewContainer = document.getElementById('preview-container');
+    
+    // Load video into player
+    function loadVideo(videoId) {
+      const iframe = document.getElementById('youtube-iframe');
+      const emptyState = document.getElementById('empty-state');
+      const videoPlayer = document.getElementById('video-player');
+      const videoIdDisplay = document.getElementById('video-id-display');
       
-      previewContainer.innerHTML = `
-        <iframe
-          src="${embedUrl}"
-          style="top: 0; left: 0; width: 100%; height: 100%; position: absolute; border: 0;"
-          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen
-        ></iframe>
-      `;
-      document.getElementById('preview-overlay').classList.add('active');
+      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+      videoIdDisplay.textContent = `Video ID: ${videoId}`;
+      
+      emptyState.classList.add('hidden');
+      videoPlayer.classList.remove('hidden');
+      
+      // Add to recent videos
+      addToRecent(videoId);
     }
-
-    function closePreview() {
-      document.getElementById('preview-overlay').classList.remove('active');
-      document.getElementById('preview-container').innerHTML = '';
-    }
-
-    // Render videos
-    function renderVideos() {
-      const grid = document.getElementById('videos-grid');
-      grid.innerHTML = '';
-
-      // Get videos from config
-      const videos = [];
-      for (let i = 1; i <= 11; i++) {
-        const titleKey = `video_${i}_title`;
-        const urlKey = `video_${i}_url`;
-        const title = config[titleKey] || defaultConfig[titleKey];
-        const url = config[urlKey] || defaultConfig[urlKey];
-
-        if (title && url) {
-          videos.push({ title, url, id: i });
-        }
+    
+    // Add video to recent history
+    function addToRecent(videoId) {
+      // Remove if already exists
+      recentVideos = recentVideos.filter(id => id !== videoId);
+      // Add to beginning
+      recentVideos.unshift(videoId);
+      // Keep only MAX_RECENT
+      if (recentVideos.length > MAX_RECENT) {
+        recentVideos = recentVideos.slice(0, MAX_RECENT);
       }
-
-      videos.forEach(video => {
-        const videoId = extractVideoId(video.url);
-        if (!videoId) return;
-
-        const card = document.createElement('div');
-        card.className = 'video-card';
-        card.dataset.videoId = video.id;
-
-        card.innerHTML = `
-          <div class="video-thumbnail">
-            <div class="play-icon">▶</div>
-          </div>
-          <div class="video-info">
-            <div class="video-title">${video.title}</div>
+      updateRecentUI();
+    }
+    
+    // Update recent videos UI
+    function updateRecentUI() {
+      const recentSection = document.getElementById('recent-section');
+      const recentContainer = document.getElementById('recent-videos');
+      
+      if (recentVideos.length === 0) {
+        recentSection.classList.add('hidden');
+        return;
+      }
+      
+      recentSection.classList.remove('hidden');
+      recentContainer.innerHTML = '';
+      
+      recentVideos.forEach(videoId => {
+        const thumbnail = document.createElement('button');
+        thumbnail.className = 'group relative aspect-video rounded-lg overflow-hidden bg-black/50 hover:ring-2 hover:ring-violet-500 transition-all';
+        thumbnail.innerHTML = `
+          <img 
+            src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" 
+            alt="Video thumbnail"
+            class="w-full h-full object-cover"
+            loading="lazy"
+            onerror="this.style.display='none';"
+          >
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
           </div>
         `;
-
-        grid.appendChild(card);
-
-        card.querySelector('.video-thumbnail').addEventListener('click', () => {
-          openPreview(videoId);
-        });
+        thumbnail.onclick = () => loadVideo(videoId);
+        recentContainer.appendChild(thumbnail);
       });
     }
-
-    // Initialize Element SDK
-    window.elementSdk.init({
-      defaultConfig,
-      onConfigChange(newConfig) {
-        config = newConfig;
-        document.getElementById('gallery-title').textContent = config.gallery_title || defaultConfig.gallery_title;
-        renderVideos();
-      },
-      mapToCapabilities(cfg) {
-        return {
-          recolorables: [],
+    
+    // Show error message
+    function showError(message) {
+      const input = document.getElementById('url-input');
+      input.classList.add('border-red-500');
+      input.placeholder = message;
+      
+      setTimeout(() => {
+        input.classList.remove('border-red-500');
+        input.placeholder = defaultConfig.input_placeholder;
+      }, 3000);
+    }
+    
+    // Reset player to empty state
+    function resetPlayer() {
+      const iframe = document.getElementById('youtube-iframe');
+      const emptyState = document.getElementById('empty-state');
+      const videoPlayer = document.getElementById('video-player');
+      const urlInput = document.getElementById('url-input');
+      
+      iframe.src = '';
+      emptyState.classList.remove('hidden');
+      videoPlayer.classList.add('hidden');
+      urlInput.value = '';
+      urlInput.focus();
+    }
+    
+    // Initialize event listeners
+    function initEventListeners() {
+      const form = document.getElementById('video-form');
+      const urlInput = document.getElementById('url-input');
+      const clearBtn = document.getElementById('clear-btn');
+      const newVideoBtn = document.getElementById('new-video-btn');
+      const clearHistoryBtn = document.getElementById('clear-history-btn');
+      
+      // Form submission
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const url = urlInput.value.trim();
+        
+        if (!url) {
+          showError('Please enter a YouTube URL');
+          return;
+        }
+        
+        const videoId = extractVideoId(url);
+        
+        if (!videoId) {
+          showError('Invalid YouTube URL');
+          return;
+        }
+        
+        loadVideo(videoId);
+      });
+      
+      // Input clear button visibility
+      urlInput.addEventListener('input', () => {
+        clearBtn.classList.toggle('hidden', !urlInput.value);
+      });
+      
+      // Clear input
+      clearBtn.addEventListener('click', () => {
+        urlInput.value = '';
+        clearBtn.classList.add('hidden');
+        urlInput.focus();
+      });
+      
+      // New video button
+      newVideoBtn.addEventListener('click', resetPlayer);
+      
+      // Clear history
+      clearHistoryBtn.addEventListener('click', () => {
+        recentVideos = [];
+        updateRecentUI();
+      });
+    }
+    
+    // Element SDK integration
+    async function onConfigChange(config) {
+      const pageTitle = document.getElementById('page-title');
+      const urlInput = document.getElementById('url-input');
+      const appWrapper = document.getElementById('app-wrapper');
+      
+      // Update title
+      pageTitle.textContent = config.page_title || defaultConfig.page_title;
+      
+      // Update placeholder
+      urlInput.placeholder = config.input_placeholder || defaultConfig.input_placeholder;
+      
+      // Update colors
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const accentColor = config.accent_color || defaultConfig.accent_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      
+      appWrapper.style.background = `linear-gradient(135deg, ${bgColor} 0%, ${adjustColor(bgColor, 20)} 50%, ${adjustColor(bgColor, 40)} 100%)`;
+      pageTitle.style.color = textColor;
+      
+      // Update font
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      document.body.style.fontFamily = `${fontFamily}, Outfit, sans-serif`;
+      
+      // Update font size
+      const fontSize = config.font_size || defaultConfig.font_size;
+      document.body.style.fontSize = `${fontSize}px`;
+    }
+    
+    // Helper to adjust color brightness
+    function adjustColor(hex, amount) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+      const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+      const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
+      return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+    }
+    
+    // Initialize SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            {
+              get: () => config.background_color || defaultConfig.background_color,
+              set: (value) => window.elementSdk.setConfig({ background_color: value })
+            },
+            {
+              get: () => config.accent_color || defaultConfig.accent_color,
+              set: (value) => window.elementSdk.setConfig({ accent_color: value })
+            },
+            {
+              get: () => config.text_color || defaultConfig.text_color,
+              set: (value) => window.elementSdk.setConfig({ text_color: value })
+            }
+          ],
           borderables: [],
-          fontEditable: undefined,
-          fontSizeable: undefined
-        };
-      },
-      mapToEditPanelValues(cfg) {
-        return new Map([
-          ['gallery_title', cfg.gallery_title || defaultConfig.gallery_title],
-          ['video_1_title', cfg.video_1_title || defaultConfig.video_1_title],
-          ['video_1_url', cfg.video_1_url || defaultConfig.video_1_url],
-          ['video_2_title', cfg.video_2_title || defaultConfig.video_2_title],
-          ['video_2_url', cfg.video_2_url || defaultConfig.video_2_url],
-          ['video_3_title', cfg.video_3_title || defaultConfig.video_3_title],
-          ['video_3_url', cfg.video_3_url || defaultConfig.video_3_url],
-          ['video_4_title', cfg.video_4_title || defaultConfig.video_4_title],
-          ['video_4_url', cfg.video_4_url || defaultConfig.video_4_url],
-          ['video_5_title', cfg.video_5_title || defaultConfig.video_5_title],
-          ['video_5_url', cfg.video_5_url || defaultConfig.video_5_url],
-          ['video_6_title', cfg.video_6_title || defaultConfig.video_6_title],
-          ['video_6_url', cfg.video_6_url || defaultConfig.video_6_url],
-          ['video_7_title', cfg.video_7_title || defaultConfig.video_7_title],
-          ['video_7_url', cfg.video_7_url || defaultConfig.video_7_url],
-          ['video_8_title', cfg.video_8_title || defaultConfig.video_8_title],
-          ['video_8_url', cfg.video_8_url || defaultConfig.video_8_url],
-          ['video_9_title', cfg.video_9_title || defaultConfig.video_9_title],
-          ['video_9_url', cfg.video_9_url || defaultConfig.video_9_url],
-          ['video_10_title', cfg.video_10_title || defaultConfig.video_10_title],
-          ['video_10_url', cfg.video_10_url || defaultConfig.video_10_url],
-          ['video_11_title', cfg.video_11_title || defaultConfig.video_11_title],
-          ['video_11_url', cfg.video_11_url || defaultConfig.video_11_url]
-        ]);
-      }
-    });
-
-    // Close preview handlers
-    document.getElementById('close-preview-btn').addEventListener('click', closePreview);
-    document.getElementById('preview-overlay').addEventListener('click', (e) => {
-      if (e.target.id === 'preview-overlay') {
-        closePreview();
-      }
-    });
-
-    // Initial render
-    renderVideos();
+          fontEditable: {
+            get: () => config.font_family || defaultConfig.font_family,
+            set: (value) => window.elementSdk.setConfig({ font_family: value })
+          },
+          fontSizeable: {
+            get: () => config.font_size || defaultConfig.font_size,
+            set: (value) => window.elementSdk.setConfig({ font_size: value })
+          }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['page_title', config.page_title || defaultConfig.page_title],
+          ['input_placeholder', config.input_placeholder || defaultConfig.input_placeholder]
+        ])
+      });
+    }
+    
+    // Initialize app
+    initEventListeners();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9da28345e1bb498c',t:'MTc3MzE0NzczNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9da282dfa07d498c',t:'MTc3MzE0NzcxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
